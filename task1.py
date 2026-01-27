@@ -4,53 +4,25 @@ import hashlib
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 
-
-# -----------------------------
-# Helpers
-# -----------------------------
-
 def hex_to_int(s):
-    """Turn a multi-line hex string (with spaces/newlines) into an integer."""
-    oneline = "".join(s.split())
-    return int(oneline, 16)
-
+    oneline = "".join(s.split())                                        # remove whitespace and concat
+    return int(oneline, 16)                                             # parse as hex
 
 def sha256_trunc16_from_int(x):
-    """
-    Compute SHA256(x_as_bytes) and truncate to 16 bytes for AES-128 key.
-    """
-    x_bytes = x.to_bytes((x.bit_length() + 7) // 8 or 1, "big")
-    return hashlib.sha256(x_bytes).digest()[:16]
-
+    x_bytes = x.to_bytes((x.bit_length() + 7) // 8 or 1, "big")         # convert int to bytes
+    return hashlib.sha256(x_bytes).digest()[:16]                        # hash and truncate
 
 def aes_cbc_encrypt(key16, iv16, plaintext_bytes):
-    """
-    AES-CBC encrypt with PKCS#7 padding.
-    """
-    cipher = AES.new(key16, AES.MODE_CBC, iv=iv16)
-    return cipher.encrypt(pad(plaintext_bytes, AES.block_size))
-
+    cipher = AES.new(key16, AES.MODE_CBC, iv=iv16)                      # encrypt
+    return cipher.encrypt(pad(plaintext_bytes, AES.block_size))         # add padding
 
 def aes_cbc_decrypt(key16, iv16, ciphertext_bytes):
-    """
-    AES-CBC decrypt and remove PKCS#7 padding.
-    """
-    cipher = AES.new(key16, AES.MODE_CBC, iv=iv16)
-    return unpad(cipher.decrypt(ciphertext_bytes), AES.block_size)
-
+    cipher = AES.new(key16, AES.MODE_CBC, iv=iv16)                      # decrypt
+    return unpad(cipher.decrypt(ciphertext_bytes), AES.block_size)      # remove padding
 
 def validate_dh_public(y, q):
-    """
-    Basic DH public value validation.
-    Rejects obvious bad values.
-    """
     if not (1 < y < q - 1):
-        raise ValueError("Invalid DH public value (must satisfy 1 < y < q-1).")
-
-
-# -----------------------------
-# Plain Party class (no dataclass)
-# -----------------------------
+        raise ValueError("Invalid DH public value (must satisfy 1 < y < q-1).") # simple check
 
 class Party:
     def __init__(self, name, q, a):
@@ -82,11 +54,6 @@ class Party:
 
         # k = SHA256(s) truncated to 16 bytes
         self.key16 = sha256_trunc16_from_int(self.shared)
-
-
-# -----------------------------
-# Task 1: run DH + AES messages
-# -----------------------------
 
 def run_task1(q, a, label):
     print("\n" + "=" * 70)
