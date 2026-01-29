@@ -20,10 +20,6 @@ def aes_cbc_decrypt(key16, iv16, ciphertext_bytes):
     cipher = AES.new(key16, AES.MODE_CBC, iv=iv16)                      # decrypt
     return unpad(cipher.decrypt(ciphertext_bytes), AES.block_size)      # remove padding
 
-def validate_dh_public(y, q):
-    if not (1 < y < q - 1):
-        raise ValueError("Invalid DH public value (must satisfy 1 < y < q-1).") # simple check
-
 class Party:
     def __init__(self, name, q, a):
         self.name = name
@@ -43,17 +39,6 @@ class Party:
             raise RuntimeError(self.name + ": private exponent not set")
         self.y_pub = pow(self.a, self.x_priv, self.q)
 
-    def compute_shared_and_key(self, other_y):
-        if self.x_priv is None:
-            raise RuntimeError(self.name + ": private exponent not set")
-        validate_dh_public(other_y, self.q)
-
-        # s = (other_y)^x_priv mod q
-        self.shared = pow(other_y, self.x_priv, self.q)
-
-        # k = SHA256(s) truncated to 16 bytes
-        self.key16 = sha256_trunc16(self.shared)
-
 def run_task1(q, a, label):
     print("\n" + "=" * 70)
     print("Task 1:", label)
@@ -72,14 +57,17 @@ def run_task1(q, a, label):
     alice.compute_public()
     bob.compute_public()
 
-    print("Alice sends Y_A =", alice.y_pub)
+    print("\nAlice sends Y_A =", alice.y_pub)
     print("Bob   sends Y_B =", bob.y_pub)
 
     # Compute shared secrets + AES keys
-    alice.compute_shared_and_key(bob.y_pub)
-    bob.compute_shared_and_key(alice.y_pub)
+    bob.shared = pow(alice.y_pub, bob.x_priv, bob.q)
+    bob.key16 = sha256_trunc16(bob.shared)
 
-    print("Alice key (hex) =", alice.key16.hex())
+    alice.shared = pow(bob.y_pub, alice.x_priv, alice.q)
+    alice.key16 = sha256_trunc16(alice.shared)
+
+    print("\nAlice key (hex) =", alice.key16.hex())
     print("Bob   key (hex) =", bob.key16.hex())
 
     if alice.key16 != bob.key16:

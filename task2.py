@@ -20,10 +20,6 @@ def aes_cbc_decrypt(key16, iv16, ciphertext_bytes):
     cipher = AES.new(key16, AES.MODE_CBC, iv=iv16)                      # decrypt
     return unpad(cipher.decrypt(ciphertext_bytes), AES.block_size)      # remove padding
 
-def validate_dh_public(y, q):
-    if not (1 < y < q - 1):
-        raise ValueError("Invalid DH public value (must satisfy 1 < y < q-1).") # simple check
-
 class Party:
     def __init__(self, name, q, a):
         self.name = name
@@ -62,6 +58,9 @@ def run_task2(q, a, label):
     alice.compute_public()
     bob.compute_public()
 
+    print("\nY_A =", alice.y_pub)
+    print("Y_B =", bob.y_pub)
+
     # mallory tampers with the public values
     bob.y_pub = mallory.q
     alice.y_pub = mallory.q
@@ -79,7 +78,7 @@ def run_task2(q, a, label):
         mallory.shared = alice.shared
         mallory.key16 = sha256_trunc16(mallory.shared)
         
-    print("Alice key (hex) =", alice.key16.hex())
+    print("\nAlice key (hex) =", alice.key16.hex())
     print("Bob   key (hex) =", bob.key16.hex())
     print("Mallory key (hex) =", mallory.key16.hex())
 
