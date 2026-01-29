@@ -78,6 +78,10 @@ def run_task2(q, a, label):
     else:
         mallory.shared = alice.shared
         mallory.key16 = sha256_trunc16(mallory.shared)
+        
+    print("Alice key (hex) =", alice.key16.hex())
+    print("Bob   key (hex) =", bob.key16.hex())
+    print("Mallory key (hex) =", mallory.key16.hex())
 
     # Exchange encrypted messages
     m0 = b"Hi Bob!"
@@ -85,15 +89,14 @@ def run_task2(q, a, label):
     print("\nAlice -> Bob: c0 =", c0.hex())
 
     m0_dec = aes_cbc_decrypt(bob.key16, iv, c0)
-    print("Bob decrypted c0, m0 =", m0_dec)
+    print("Bob decrypted c0:", m0_dec)
 
     m1 = b"Hi Alice!"
     c1 = aes_cbc_encrypt(bob.key16, iv, m1)
     print("\nBob -> Alice: c1 =", c1.hex())
 
     m1_dec = aes_cbc_decrypt(alice.key16, iv, c1)
-    print("Alice decrypted c1, m1 =", m1_dec)
-
+    print("Alice decrypted c1:", m1_dec)
     print("\n✅ Success\n")
 
     # Mallory can also decrypt both messages since she knows the shared secret
