@@ -75,9 +75,9 @@ def run_task2(q, a, label):
     if alice.key16 != bob.key16:
         raise RuntimeError("ERROR: keys do not match!")
     else:
-        mallory.shared = alice.shared
+        mallory.shared = 0
         mallory.key16 = sha256_trunc16(mallory.shared)
-        
+    
     print("\nAlice key (hex) =", alice.key16.hex())
     print("Bob   key (hex) =", bob.key16.hex())
     print("Mallory key (hex) =", mallory.key16.hex())
