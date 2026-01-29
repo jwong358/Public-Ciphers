@@ -8,7 +8,7 @@ def hex_to_int(s):
     oneline = "".join(s.split())                                        # remove whitespace and concat
     return int(oneline, 16)                                             # parse as hex
 
-def sha256_trunc16_from_int(x):
+def sha256_trunc16(x):
     x_bytes = x.to_bytes((x.bit_length() + 7) // 8 or 1, "big")         # convert int to bytes
     return hashlib.sha256(x_bytes).digest()[:16]                        # hash and truncate
 
@@ -36,8 +36,7 @@ class Party:
         self.key16 = None        # AES key (16 bytes)
 
     def pick_private(self):
-        # Pick random X in [2, q-2]
-        self.x_priv = secrets.randbelow(self.q - 3) + 2
+        self.x_priv = secrets.randbelow(self.q - 3) + 2      # Pick random X in [2, q-2]
 
     def compute_public(self):
         if self.x_priv is None:
@@ -53,25 +52,23 @@ class Party:
         self.shared = pow(other_y, self.x_priv, self.q)
 
         # k = SHA256(s) truncated to 16 bytes
-        self.key16 = sha256_trunc16_from_int(self.shared)
+        self.key16 = sha256_trunc16(self.shared)
 
 def run_task1(q, a, label):
     print("\n" + "=" * 70)
     print("Task 1:", label)
     print("=" * 70)
 
-    # Assignment says you may assume Alice and Bob use the same IV.
-    # Real systems use random IVs (new per message).
-    iv = b"\x00" * 16
+    iv = b"\x00" * 16 # same IV
 
     alice = Party("Alice", q, a)
     bob = Party("Bob", q, a)
 
-    # Alice/Bob pick private exponents
+    # private exponents
     alice.pick_private()
     bob.pick_private()
 
-    # Alice/Bob compute public values
+    # public values
     alice.compute_public()
     bob.compute_public()
 
@@ -94,14 +91,14 @@ def run_task1(q, a, label):
     print("\nAlice -> Bob: c0 =", c0.hex())
 
     m0_dec = aes_cbc_decrypt(bob.key16, iv, c0)
-    print("Bob decrypted m0:", m0_dec)
+    print("Bob decrypted c0, m0 =", m0_dec)
 
     m1 = b"Hi Alice!"
     c1 = aes_cbc_encrypt(bob.key16, iv, m1)
     print("\nBob -> Alice: c1 =", c1.hex())
 
     m1_dec = aes_cbc_decrypt(alice.key16, iv, c1)
-    print("Alice decrypted m1:", m1_dec)
+    print("Alice decrypted c1, m1 =", m1_dec)
 
     print("\n✅ Success\n")
 
