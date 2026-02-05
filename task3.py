@@ -62,14 +62,6 @@ def run_task3():
     print("Task 3: RSA Key Generation and Encryption/Decryption")
     print("=" * 70)
 
-    # # Generate RSA values
-    # p, q, n, phi_n, d = compute_rsa_values()
-    # print(f"\nPrime p: {p}")
-    # print(f"\nPrime q: {q}")
-    # print(f"\nModulus n: {n}")
-    # print(f"\nTotient φ(n): {phi_n}")
-    # print(f"\nPrivate exponent d: {d}")
-
     Alice = Party("Alice")
     Bob = Party("Bob")
     Mallory = Party("Mallory")
@@ -82,12 +74,14 @@ def run_task3():
     Bob.c = rsa_encrypt(Bob.s, e, Bob.n)
 
     Mallory.r = generate_rand_int(Mallory.n)
-    Mallory.c = Bob.c * rsa_encrypt(Mallory.r, e, Mallory.n)
+    Mallory.c = (Bob.c * rsa_encrypt(Mallory.r, e, Mallory.n)) % Mallory.n
 
     Alice.c = Mallory.c
     Alice.s = rsa_decrypt(Alice.c, Alice.d, Alice.n)
 
     Alice.k = sha256_trunc16(Alice.s)
+    print(f"\nAlice's computed s: {Alice.s}")
+    print(f"\nAlice's derived key (hex): {Alice.k.hex()}")
 
     # Message to encrypt
     message = "The quick brown fox jumps over the lazy dog"
@@ -105,15 +99,13 @@ def run_task3():
     print(f"\nDecrypted message using Alice's key: {alice_decrypted}")
 
     # Decrypt the message using Mallory's key
-    Mallory.s = rsa_decrypt(Mallory.c, Alice.d, Mallory.n)
+    Mallory.s = Bob.s * Mallory.r % Mallory.n                                   # Mallory can compute s = s_Bob * r mod n
+    Mallory.k = sha256_trunc16(Mallory.s)
+    print(f"\nMallory's computed s: {Mallory.s}")
+    print(f"\nMallory's derived key (hex): {Mallory.k.hex()}")
+    mallory_decrypted = aes_cbc_decrypt(Mallory.k, b"\x00" * 16, c)
+    print(f"\nDecrypted message using Mallory's key: {mallory_decrypted}")
 
-
-    # # Convert decrypted integer back to string
-    # hex_decrypted = hex(m_decrypted)[2:]  # Remove '0x' prefix
-    # if len(hex_decrypted) % 2 != 0:
-    #     hex_decrypted = '0' + hex_decrypted  # Ensure even length for bytes conversion
-    # decrypted_message = bytes.fromhex(hex_decrypted).decode()
-    # print(f"\nDecrypted message: {decrypted_message}")
 
 if __name__ == "__main__":
     run_task3()
