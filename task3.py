@@ -66,18 +66,23 @@ def run_task3():
     Bob = Party("Bob")
     Mallory = Party("Mallory")
 
+    # Alice generates RSA values and sends n to Bob and Mallory
     Alice.generate_rsa_values()
     Bob.n = Alice.n
     Mallory.n = Alice.n
 
+    # Bob generates s and computes c
     Bob.s = generate_rand_int(Bob.n)
     Bob.c = rsa_encrypt(Bob.s, e, Bob.n)
 
+    # Mallory generates r and computes c' 
     Mallory.r = generate_rand_int(Mallory.n)
-    Mallory.c = (Bob.c * rsa_encrypt(Mallory.r, e, Mallory.n)) % Mallory.n
+    Mallory.c = (Bob.c * rsa_encrypt(Mallory.r, e, Mallory.n)) % Mallory.n # Mallory computes c' = c_Bob * c_Mallory mod n
 
+    # Mallory sends c' to Alice, Alice decrypts to get s'
     Alice.c = Mallory.c
     Alice.s = rsa_decrypt(Alice.c, Alice.d, Alice.n)
+
 
     Alice.k = sha256_trunc16(Alice.s)
     print(f"\nAlice's computed s: {Alice.s}")
