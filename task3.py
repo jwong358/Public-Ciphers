@@ -56,6 +56,10 @@ class Party:
 
             self.d = pow(e, -1, self.phi_n)                     # Modular inverse of e mod phi_n
             return self.p, self.q, self.n, self.phi_n, self.d
+        
+    def sign(self, message):
+        m = ascii_to_hex_to_int(message)
+        return rsa_encrypt(m, self.d, self.n)
 
 def run_task3():
     print("\n" + "=" * 70)
@@ -111,6 +115,21 @@ def run_task3():
     mallory_decrypted = aes_cbc_decrypt(Mallory.k, b"\x00" * 16, c)
     print(f"\nDecrypted message using Mallory's key: {mallory_decrypted}")
 
+    # Alice signatures
+    m1 = "Poop butt"
+    m2 = "Butt poop"
+    sig1 = Alice.sign(m1)
+    sig2 = Alice.sign(m2)
+    print(f"\nAlice's signature on m1: {sig1}")
+    print(f"\nAlice's signature on m2: {sig2}")
+
+    # Mallory signature forgery
+    sig3 = (sig1 * sig2) % Mallory.n                                    # Mallory computes sig3 = sig1 * sig2 mod n
+    m3 = ascii_to_hex_to_int(m1) * ascii_to_hex_to_int(m2)              # Mallory computes m3 = m1 * m2 as integer
+    verifty_sig3 = rsa_encrypt(sig3, e, Mallory.n)                      # Verify sig3 by encrypting it with e
+    print(f"\nMallory's forged signature sig3: {sig3}")
+    print(f"\nMessage m3 as integer: {m3}")
+    print(f"\nVerification of sig3: {verifty_sig3}")
 
 if __name__ == "__main__":
     run_task3()
