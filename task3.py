@@ -1,7 +1,6 @@
-import hashlib
 import secrets
 
-from task2 import sha256_trunc16, aes_cbc_encrypt, aes_cbc_decrypt
+from task2_1 import sha256_trunc16, aes_cbc_encrypt, aes_cbc_decrypt
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Util import number
@@ -13,7 +12,7 @@ def generate_rand_prime():
 
 def generate_rand_int(n):
     while True:
-        s = secrets.randbelow(n - 2) + 1                        # Pick random s in [1, n-1]
+        s = secrets.randbelow(n - 1) + 1                        # Pick random s in [1, n-1]
         if number.GCD(s, n) == 1:                               # Ensure s is coprime to n
             return s
         
@@ -51,7 +50,7 @@ class Party:
             self.n = self.p * self.q
             self.phi_n = (self.p - 1) * (self.q - 1)
 
-            if number.GCD(self.n, self.phi_n) != 1:
+            if number.GCD(e, self.phi_n) != 1:
                 continue                                        # Try again if e and phi_n are not coprime
 
             self.d = pow(e, -1, self.phi_n)                     # Modular inverse of e mod phi_n
