@@ -38,39 +38,48 @@ class Party:
             raise RuntimeError("private exponent not set")
         self.y_pub = pow(self.a, self.x_priv, self.q)
 
-def run_task1(q, a, label):
+def run_task2(q, a, label):
     print("\n" + "=" * 70)
-    print("Task 1:", label)
+    print("Task 2:", label)
     print("=" * 70)
 
     iv = b"\x00" * 16 # same IV
 
     alice = Party(q, a)
     bob = Party(q, a)
+    mallory = Party(q, a)
 
-    # private exponents
+    # private exponents x
     alice.pick_private()
     bob.pick_private()
 
-    # public values
+    # public values y
     alice.compute_public()
     bob.compute_public()
 
-    print("\nAlice sends Y_A =", alice.y_pub)
-    print("Bob   sends Y_B =", bob.y_pub)
+    print("\nY_A =", alice.y_pub)
+    print("Y_B =", bob.y_pub)
+
+    # mallory tampers with the public values
+    bob.y_pub = mallory.q
+    alice.y_pub = mallory.q
 
     # Compute shared secrets + AES keys
-    bob.shared = pow(alice.y_pub, bob.x_priv, bob.q)
-    bob.key16 = sha256_trunc16(bob.shared)
-
     alice.shared = pow(bob.y_pub, alice.x_priv, alice.q)
     alice.key16 = sha256_trunc16(alice.shared)
 
-    print("\nAlice key (hex) =", alice.key16.hex())
-    print("Bob   key (hex) =", bob.key16.hex())
+    bob.shared = pow(alice.y_pub, bob.x_priv, bob.q)
+    bob.key16 = sha256_trunc16(bob.shared)
 
     if alice.key16 != bob.key16:
         raise RuntimeError("ERROR: keys do not match!")
+    else:
+        mallory.shared = 0
+        mallory.key16 = sha256_trunc16(mallory.shared)
+    
+    print("\nAlice key (hex) =", alice.key16.hex())
+    print("Bob   key (hex) =", bob.key16.hex())
+    print("Mallory key (hex) =", mallory.key16.hex())
 
     # Exchange encrypted messages
     m0 = b"Hi Bob!"
@@ -87,9 +96,16 @@ def run_task1(q, a, label):
     m1_dec = aes_cbc_decrypt(alice.key16, iv, c1)
     print("Alice decrypted c1:", m1_dec)
 
+    # Mallory can also decrypt both messages since she knows the shared secret
+    mal_dec_c0 = aes_cbc_decrypt(mallory.key16, iv, c0)
+    print("\nMallory decrypted c0:", mal_dec_c0)
+
+    mal_dec_c1 = aes_cbc_decrypt(mallory.key16, iv, c1)
+    print("Mallory decrypted c1:", mal_dec_c1)
+
 def main():
     # ---- small group ----
-    run_task1(q=37, a=5, label="q=37, a=5")
+    run_task2(q=37, a=5, label="q=37, a=5")
 
     # ---- real number group ----
     q_hex = """
@@ -113,7 +129,7 @@ def main():
     q = hex_to_int(q_hex)
     a = hex_to_int(a_hex)
 
-    run_task1(q=q, a=a, label="IETF 1024-bit parameters")
+    run_task2(q=q, a=a, label="IETF 1024-bit parameters")
 
 
 if __name__ == "__main__":
