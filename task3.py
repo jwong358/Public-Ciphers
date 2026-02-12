@@ -80,7 +80,8 @@ def run_task3():
 
     # Mallory generates r and computes c' 
     Mallory.r = generate_rand_int(Mallory.n)
-    Mallory.c = (Bob.c * rsa_encrypt(Mallory.r, e, Mallory.n)) % Mallory.n # Mallory computes c' = c_Bob * c_Mallory mod n
+    # Mallory.c = (Bob.c * rsa_encrypt(Mallory.r, e, Mallory.n)) % Mallory.n # Mallory computes c' = c_Bob * c_Mallory mod n
+    Mallory.c = 1
 
     # Mallory sends c' to Alice, Alice decrypts to get s'
     Alice.c = Mallory.c
@@ -107,7 +108,8 @@ def run_task3():
     print(f"\nDecrypted message using Alice's key: {alice_decrypted}")
 
     # Decrypt the message using Mallory's key
-    Mallory.s = Bob.s * Mallory.r % Mallory.n                                   # Mallory can compute s = s_Bob * r mod n
+    # Mallory.s = Bob.s * Mallory.r % Mallory.n                                   # Mallory can compute s = s_Bob * r mod n
+    Mallory.s = 1
     Mallory.k = sha256_trunc16(Mallory.s)
     print(f"\nMallory's computed s: {Mallory.s}")
     print(f"\nMallory's derived key (hex): {Mallory.k.hex()}")
